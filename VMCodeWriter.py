@@ -1,6 +1,6 @@
 class VMCodeWriter:
-    def __init__(self):
-        print("Initialized CodeWriter")
+    def __init__(self, writeFile):
+        self.writeFile = writeFile
 
     # Writes to the output file the 
     # assembly code that implements the given

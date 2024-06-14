@@ -13,17 +13,17 @@ def main():
     fileName = pathList[len(pathList) - 1]
     vmPath = os.path.join(workingDirectory, filePath)
     outFilePath = workingDirectory + "/" + re.sub(r'\.vm$',".asm", fileName)
-    parser = VMParser()
-    codeWriter = VMCodeWriter()
+
 
     inFile = open(vmPath, 'r', encoding="utf-8")
     outFile = open(outFilePath, 'w', encoding='utf-8')
-    for line in inFile:
-        #parse
-        #covert to asm
-        #write line out
-        outFile.write(line)
     
+    parser = VMParser(inFile)
+    codeWriter = VMCodeWriter(outFile)
+
+    while parser.hasMoreLines():
+        parser.advance()
+        
     inFile.close()
     outFile.close()
 
