@@ -67,8 +67,8 @@ class VMParser:
         if self.commandType() == CommandType.UNKNOWN:
             sys.exit("Unknown command: \"" + self.currentCommand + "\"")
         if self.commandType() != CommandType.C_ARITHMETIC:
-            self.arg1 = commandList[1]
-            self.arg2 = commandList[2]
+            self.__arg1 = commandList[1]
+            self.__arg2 = commandList[2]
     
     # Returns the type of the current command (C_FOO)
     def commandType(self):
@@ -78,10 +78,10 @@ class VMParser:
     # Should not be called if the command type is C_RETURN
     def arg1(self):
 
-        return None
+        return self.__arg1
 
     # Returns second part of the command, should only be called if
     # command is of type C_PUSH, C_POP, C_FUNCTION, C_CALL
     def arg2(self):
-        return None
+        return self.__arg2;
     
