@@ -4,7 +4,7 @@ class VMParser:
 
     def __init__(self, readFile):
         self.readFile = readFile
-        self.currentCommand = ""
+        self.__currentCommand = ""
         self.__commandType = CommandType.UNKNOWN
 
     def __isArithmeticCommand(self, command):
@@ -61,18 +61,23 @@ class VMParser:
     # Reads next command from input and makes it the
     # current command
     def advance(self):
-        self.currentCommand = self.__seekNextCommand(self.readFile)
-        commandList = self.currentCommand.split()
-        self.__commandType = self.__classifyCommand(commandList[0])
+        vmInstruction = self.__seekNextCommand(self.readFile)
+        commandList = vmInstruction.split()
+        self.__currentCommand = commandList[0]
+        self.__commandType = self.__classifyCommand(self.currentCommand())
         if self.commandType() == CommandType.UNKNOWN:
-            sys.exit("Unknown command: \"" + self.currentCommand + "\"")
+            sys.exit("Unknown command: \"" + vmInstruction + "\"")
         if self.commandType() != CommandType.C_ARITHMETIC:
             self.__arg1 = commandList[1]
-            self.__arg2 = commandList[2]
+            self.__arg2 = int(commandList[2])
     
     # Returns the type of the current command (C_FOO)
     def commandType(self):
         return self.__commandType
+    
+    # Returns the current command in string form
+    def currentCommand(self):
+        return self.__currentCommand
     
     # Returns the first part of the current command
     # Should not be called if the command type is C_RETURN
