@@ -1,7 +1,6 @@
 import sys, os, re
 from VMParser import VMParser
 from VMCodeWriter import VMCodeWriter
-from CommandType import CommandType
 def main():
 
     # Initialize environment
@@ -23,11 +22,11 @@ def main():
 
     while parser.hasMoreLines():
         parser.advance()
-        if(parser.commandType() == CommandType.C_ARITHMETIC):
+        if(parser.commandType() == "C_ARITHMETIC"):
             codeWriter.writeArithmetic(parser.currentCommand())
-        elif parser.commandType() == CommandType.C_PUSH:
+        elif parser.commandType() == "C_PUSH":
             codeWriter.writePushPop(parser.currentCommand(), parser.arg1(), parser.arg2())
-        elif parser.commandType() == CommandType.C_POP:
+        elif parser.commandType() == "C_POP":
             codeWriter.writePushPop(parser.currentCommand(), parser.arg1(), parser.arg2())
     inFile.close()
     outFile.close()

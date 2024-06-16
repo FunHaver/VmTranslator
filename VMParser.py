@@ -1,11 +1,10 @@
-from CommandType import CommandType
 import sys
 class VMParser:
 
     def __init__(self, readFile):
         self.readFile = readFile
         self.__currentCommand = ""
-        self.__commandType = CommandType.UNKNOWN
+        self.__commandType = "UNKNOWN"
 
     def __isArithmeticCommand(self, command):
         if command == "add":
@@ -32,13 +31,13 @@ class VMParser:
     def __classifyCommand(self, command):
         
         if self.__isArithmeticCommand(command):
-            return CommandType.C_ARITHMETIC
+            return "C_ARITHMETIC"
         elif command == "pop":
-            return CommandType.C_POP
+            return "C_POP"
         elif command == "push":
-            return CommandType.C_PUSH
+            return "C_PUSH"
         else: 
-            return CommandType.UNKNOWN
+            return "UNKNOWN"
     
     def __seekNextCommand(self, file):
         line = file.readline().rstrip()
@@ -65,9 +64,9 @@ class VMParser:
         commandList = vmInstruction.split()
         self.__currentCommand = commandList[0]
         self.__commandType = self.__classifyCommand(self.currentCommand())
-        if self.commandType() == CommandType.UNKNOWN:
+        if self.commandType() == "UNKNOWN":
             sys.exit("Unknown command: \"" + vmInstruction + "\"")
-        if self.commandType() != CommandType.C_ARITHMETIC:
+        if self.commandType() != "C_ARITHMETIC":
             self.__arg1 = commandList[1]
             self.__arg2 = int(commandList[2])
     
