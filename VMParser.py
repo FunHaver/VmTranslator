@@ -1,11 +1,14 @@
 import sys
 class VMParser:
 
-    def __init__(self, readFile):
-        self.readFile = readFile
+    def __init__(self, inFilePath):
+        self.inFile = open(inFilePath, 'r', encoding='utf-8')
         self.__currentCommand = ""
         self.__commandType = "UNKNOWN"
 
+    def __del__(self):
+        self.inFile.close()
+    
     def __isArithmeticCommand(self, command):
         if command == "add":
             return True
@@ -51,16 +54,16 @@ class VMParser:
             
     # Any more lines in the input
     def hasMoreLines(self):
-        currentPos = self.readFile.tell()
-        self.readFile.seek(currentPos + 1)
-        nextLine = self.readFile.readline()
-        self.readFile.seek(currentPos)
+        currentPos = self.inFile.tell()
+        self.inFile.seek(currentPos + 1)
+        nextLine = self.inFile.readline()
+        self.inFile.seek(currentPos)
         return nextLine != ""
 
     # Reads next command from input and makes it the
     # current command
     def advance(self):
-        vmInstruction = self.__seekNextCommand(self.readFile)
+        vmInstruction = self.__seekNextCommand(self.inFile)
         commandList = vmInstruction.split()
         self.__currentCommand = commandList[0]
         self.__commandType = self.__classifyCommand(self.currentCommand())

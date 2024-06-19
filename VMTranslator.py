@@ -12,24 +12,19 @@ def main():
     fileName = pathList[len(pathList) - 1]
     vmPath = os.path.join(workingDirectory, filePath)
     outFilePath = workingDirectory + "/" + re.sub(r'\.vm$',".asm", fileName)
-
-
-    inFile = open(vmPath, 'r', encoding="utf-8")
-    outFile = open(outFilePath, 'w', encoding='utf-8')
     
-    parser = VMParser(inFile)
-    codeWriter = VMCodeWriter(outFile)
+    parser = VMParser(vmPath)
+    codeWriter = VMCodeWriter(outFilePath)
 
     while parser.hasMoreLines():
         parser.advance()
-        if(parser.commandType() == "C_ARITHMETIC"):
+        if parser.commandType() == "C_PUSH" or parser.commandType() == "C_POP":
+            codeWriter.writePushPop(parser.currentCommand(), parser.arg1(), parser.arg2())
+        elif parser.commandType() == "C_ARITHMETIC":
             codeWriter.writeArithmetic(parser.currentCommand())
-        elif parser.commandType() == "C_PUSH":
-            codeWriter.writePushPop(parser.currentCommand(), parser.arg1(), parser.arg2())
-        elif parser.commandType() == "C_POP":
-            codeWriter.writePushPop(parser.currentCommand(), parser.arg1(), parser.arg2())
-    inFile.close()
-    outFile.close()
+
+    del parser
+    del codeWriter
 
 
 main()
