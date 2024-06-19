@@ -1,3 +1,4 @@
 __pycache__/
 *.asm
 .DS_Store
+*.out
