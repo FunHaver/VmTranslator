@@ -91,6 +91,7 @@ class VMCodeWriter:
             # end of routine for writing true or false to D register
             self.__asmOut("(DONE_" + str(self.instructionNo) + ")")
         
+    # convention is to put "x" into the D register, and reference "y" from the M register
     def __performBinaryArithmetic(self, command):
         # SP--
         self.__asmOut("@SP")
@@ -102,19 +103,18 @@ class VMCodeWriter:
         self.__asmOut("@SP")
         self.__asmOut("M=M-1")
 
-        # store second operand in temp variable
         self.__asmOut("A=M")
         if command == "add":
-            # D + operand_2
+            # x + y
             self.__asmOut("D=M+D")
         elif command == "sub":
-            # D - operand_2
+            # x - y
             self.__asmOut("D=M-D")
         elif command == "or":
-            # D | operand_2
+            # x | y
             self.__asmOut("D=D|M")
         elif command == "and":
-            # D & operand_2
+            # x & y
             self.__asmOut("D=D&M")
         elif command == "eq" or command == "gt" or command == "lt":
             self.__performComparisonOperation(command)
