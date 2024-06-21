@@ -12,13 +12,43 @@ class VMCodeWriter:
         self.outFile.write(asmString)
         self.outFile.write(os.linesep)
 
+    def __assignDRegisterToMemoryMapValue(self, symbol, index):
+        self.__asmOut("@" + symbol)
+        self.__asmOut("D=M")
+        self.__asmOut("@" + str(index))
+        self.__asmOut("D=D+A")
+        self.__asmOut("A=D")
+        self.__asmOut("D=M")
+    
     def __pushSegment(self, segment, index):
-        # D=index
+        
         if segment == "constant":
+            # D=index
             self.__asmOut("@" + str(index))
             self.__asmOut("D=A")
+        elif segment == "local" or segment == "argument" or segment == "this" or segment == "that":
+            # D=*(LCL + index)
+            self.__assignDRegisterToMemoryMapValue("LCL", index)
+        elif segment == "argument":
+            # D=*(ARG + index)
+            self.__assignDRegisterToMemoryMapValue("ARG", index)
+        elif segment == "this":
+            # D=*(THIS + index)
+            self.__assignDRegisterToMemoryMapValue("THIS", index)
+        elif segment == "that":
+            # D=*(THAT + index)
+            self.__assignDRegisterToMemoryMapValue("THAT", index)
+        elif segment == "pointer":
+            self.__asmOut("@" + str(3 + index))
+            self.__asmOut("D=M")
+        elif segment == "temp":
+            self.__asmOut("@" + str(5 + index))
+            self.__asmOut("D=M")
+        elif segment == "static":
+            # TODO static segment
+            self.__asmOut("")
         else:
-            return
+            sys.exit("Unknown memory segment \"" + segment + "\"")
         # *SP=D
         self.__asmOut("@SP")
         self.__asmOut("A=M")
@@ -154,4 +184,11 @@ class VMCodeWriter:
         
         if command == "push":
             self.__pushSegment(segment, index)
+        elif command == "pop":
+            print("implement pop")
+
+    # Informs the codeWriter that the translation
+    # of a new VM file has started
+    def setFileName(self, name):
+        print("Set fileName to: " + name)
 
