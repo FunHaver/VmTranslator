@@ -1,8 +1,11 @@
-import os, sys
+import os, sys, re
+
 class VMCodeWriter:
-    def __init__(self, outFilePath):
+    def __init__(self, fileName, outFilePath):
         self.outFile = open(outFilePath, 'w', encoding='utf-8')
         self.instructionNo = 0
+        self.__fileName = ""
+        self.setFileName(fileName)
 
     def __del__(self):
         self.outFile.close()
@@ -12,6 +15,9 @@ class VMCodeWriter:
         self.outFile.write(asmString)
         self.outFile.write(os.linesep)
 
+    def __writeStaticVariable(self, index):
+        return self.__fileName + "." + str(index)
+    
     def __assignDRegisterToMemoryMapValue(self, symbol, index):
         self.__asmOut("@" + symbol)
         self.__asmOut("D=M")
@@ -26,7 +32,7 @@ class VMCodeWriter:
             # D=index
             self.__asmOut("@" + str(index))
             self.__asmOut("D=A")
-        elif segment == "local" or segment == "argument" or segment == "this" or segment == "that":
+        elif segment == "local":
             # D=*(LCL + index)
             self.__assignDRegisterToMemoryMapValue("LCL", index)
         elif segment == "argument":
@@ -45,8 +51,8 @@ class VMCodeWriter:
             self.__asmOut("@" + str(5 + index))
             self.__asmOut("D=M")
         elif segment == "static":
-            # TODO static segment
-            self.__asmOut("")
+            self.__asmOut("@" + self.__writeStaticVariable(index))
+            self.__asmOut("D=M")
         else:
             sys.exit("Unknown memory segment \"" + segment + "\"")
         # *SP=D
@@ -57,6 +63,76 @@ class VMCodeWriter:
         self.__asmOut("@SP")
         self.__asmOut("M=M+1")
 
+    # These memory segments are referenced via a pointer in RAM[0..4]. 
+    # Those pointers are stored in fixed ram locations
+    def __popToMapping(self, segment, index):
+
+        # @R13 = index + @segment
+        self.__asmOut("@" + str(index))
+        self.__asmOut("D=A")
+        self.__asmOut("@" + segment)
+        self.__asmOut("D=D+M")
+        self.__asmOut("@R13")
+        self.__asmOut("M=D")
+        # SP--
+        self.__asmOut("@SP")
+        self.__asmOut("M=M-1")
+        # D = *SP
+        self.__asmOut("A=M")
+        self.__asmOut("D=M")
+        # *RAM[(index + segment)] = D
+        self.__asmOut("@R13")
+        self.__asmOut("A=M")
+        self.__asmOut("M=D")
+
+    # These memory segments are stored directly to at a fixed area of the ram
+    def __popToFixedAddress(self, segment, index):
+        ramAddress = ""
+        if segment == "POINTER":
+            ramAddress = str(3 + index)
+        elif segment == "TEMP":
+            ramAddress = str(5 + index)
+        
+        # SP--
+        self.__asmOut("@SP")
+        self.__asmOut("M=M-1")
+        # D = *SP
+        self.__asmOut("A=M")
+        self.__asmOut("D=M")
+        # RAM[segment + index] = D
+        self.__asmOut("@" + ramAddress)
+        self.__asmOut("M=D")
+
+    def __popToStatic(self, index):
+        # SP--
+        self.__asmOut("@SP")
+        self.__asmOut("M=M-1")
+        # D = *SP
+        self.__asmOut("A=M")
+        self.__asmOut("D=M")
+        # self.__fileName.index = D
+        self.__asmOut("@" + self.__writeStaticVariable(index))
+        self.__asmOut("M=D")
+
+    #Here we use a "general purpose VM Implementation Register" to store the destination address of the popped value
+    def __popSegment(self, segment, index):
+        if segment == "local":
+            self.__popToMapping("LCL", index)
+        elif segment == "argument":
+            self.__popToMapping("ARG", index)
+        elif segment == "this":
+            self.__popToMapping("THIS", index)
+        elif segment == "that":
+            self.__popToMapping("THAT", index)
+        elif segment == "temp":
+            self.__popToFixedAddress("TEMP", index)
+        elif segment == "pointer":
+            self.__popToFixedAddress("POINTER", index)
+        elif segment == "static":
+            self.__popToStatic(index)
+        else: 
+            sys.exit("Unknown memory segment \"" + segment + "\"")
+            
     def __performUnaryArithmetic(self, command):
         # SP--
         self.__asmOut("@SP")
@@ -185,10 +261,10 @@ class VMCodeWriter:
         if command == "push":
             self.__pushSegment(segment, index)
         elif command == "pop":
-            print("implement pop")
+            self.__popSegment(segment,index)
 
     # Informs the codeWriter that the translation
     # of a new VM file has started
     def setFileName(self, name):
-        print("Set fileName to: " + name)
+        self.__fileName = re.sub('\\.vm$', '', name)
 

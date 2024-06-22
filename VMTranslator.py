@@ -14,7 +14,7 @@ def main():
     outFilePath = workingDirectory + "/" + re.sub(r'\.vm$',".asm", fileName)
     
     parser = VMParser(vmPath)
-    codeWriter = VMCodeWriter(outFilePath)
+    codeWriter = VMCodeWriter(fileName,outFilePath)
 
     while parser.hasMoreLines():
         parser.advance()
