@@ -22,6 +22,8 @@ def main():
             codeWriter.writePushPop(parser.currentCommand(), parser.arg1(), parser.arg2())
         elif parser.commandType() == "C_ARITHMETIC":
             codeWriter.writeArithmetic(parser.currentCommand())
+        else:
+            print("Implement command: " + parser.currentCommand())
 
     del parser
     del codeWriter

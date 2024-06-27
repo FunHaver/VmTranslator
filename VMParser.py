@@ -39,6 +39,18 @@ class VMParser:
             return "C_POP"
         elif command == "push":
             return "C_PUSH"
+        elif command == "label":
+            return "C_LABEL"
+        elif command == "if-goto":
+            return "C_IF"
+        elif command == "goto":
+            return "C_GOTO"
+        elif command == "function":
+            return "C_FUNCTION"
+        elif command == "return":
+            return "C_RETURN"
+        elif command == "call":
+            return "C_CALL"
         else: 
             return "UNKNOWN"
     
@@ -69,9 +81,13 @@ class VMParser:
         self.__commandType = self.__classifyCommand(self.currentCommand())
         if self.commandType() == "UNKNOWN":
             sys.exit("Unknown command: \"" + vmInstruction + "\"")
-        if self.commandType() != "C_ARITHMETIC":
+        elif self.commandType() == "C_PUSH" or self.commandType() == "C_POP":
             self.__arg1 = commandList[1]
             self.__arg2 = int(commandList[2])
+        elif self.commandType() == "C_ARITHMETIC":
+            return
+        else:
+            self.__arg1 = commandList[1]
     
     # Returns the type of the current command (C_FOO)
     def commandType(self):
