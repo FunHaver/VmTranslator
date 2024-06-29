@@ -22,6 +22,12 @@ def main():
             codeWriter.writePushPop(parser.currentCommand(), parser.arg1(), parser.arg2())
         elif parser.commandType() == "C_ARITHMETIC":
             codeWriter.writeArithmetic(parser.currentCommand())
+        elif parser.commandType() == "C_LABEL":
+            codeWriter.writeLabel(parser.currentCommand(), parser.arg1())
+        elif parser.commandType() == "C_IF":
+            codeWriter.writeIf(parser.currentCommand(), parser.arg1())
+        elif parser.commandType() == "C_GOTO":
+            codeWriter.writeGoto(parser.currentCommand(), parser.arg1())
         else:
             print("Implement command: " + parser.currentCommand())
 

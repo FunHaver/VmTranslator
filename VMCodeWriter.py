@@ -263,6 +263,30 @@ class VMCodeWriter:
         elif command == "pop":
             self.__popSegment(segment,index)
 
+    def writeLabel(self, command, arg):
+        self.instructionNo+=1
+        vmComment = "// " + command + " " + arg
+        self.__asmOut(vmComment)
+        self.__asmOut("(" + arg + ")")
+
+    def writeIf(self, command, arg):
+        self.instructionNo+=1
+        vmComment = "// " + command + " " + arg
+        self.__asmOut(vmComment) 
+        self.__asmOut("@SP")
+        self.__asmOut("M=M-1")
+        self.__asmOut("A=M")
+        self.__asmOut("D=M")
+        self.__asmOut("@" + arg)
+        self.__asmOut("D;JNE")
+
+    def writeGoto(self, command, arg):
+        self.instructionNo+=1
+        vmComment = "// " + command + " " + arg
+        self.__asmOut(vmComment) 
+        self.__asmOut("@" + arg)
+        self.__asmOut("0;JMP")   
+
     # Informs the codeWriter that the translation
     # of a new VM file has started
     def setFileName(self, name):
