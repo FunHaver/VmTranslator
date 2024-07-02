@@ -81,13 +81,17 @@ class VMParser:
         self.__commandType = self.__classifyCommand(self.currentCommand())
         if self.commandType() == "UNKNOWN":
             sys.exit("Unknown command: \"" + vmInstruction + "\"")
-        elif self.commandType() == "C_PUSH" or self.commandType() == "C_POP":
+        elif self.commandType() == "C_PUSH" or self.commandType() == "C_POP" or self.commandType() == "C_FUNCTION" or self.commandType() == "C_CALL":
             self.__arg1 = commandList[1]
             self.__arg2 = int(commandList[2])
-        elif self.commandType() == "C_ARITHMETIC":
+        elif self.commandType() == "C_ARITHMETIC" or self.commandType() == "C_RETURN":
             return
         else:
-            self.__arg1 = commandList[1]
+            try:
+                self.__arg1 = commandList[1]
+            except: 
+                sys.exit("ERROR: " + vmInstruction)
+            
     
     # Returns the type of the current command (C_FOO)
     def commandType(self):

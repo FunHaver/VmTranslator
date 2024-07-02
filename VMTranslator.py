@@ -28,6 +28,12 @@ def main():
             codeWriter.writeIf(parser.currentCommand(), parser.arg1())
         elif parser.commandType() == "C_GOTO":
             codeWriter.writeGoto(parser.currentCommand(), parser.arg1())
+        elif parser.commandType() == "C_FUNCTION":
+            codeWriter.writeFunction(parser.currentCommand(), parser.arg1(), parser.arg2())
+        elif parser.commandType() == "C_RETURN":
+            codeWriter.writeReturn(parser.currentCommand())
+        elif parser.commandType() == "C_CALL":
+            codeWriter.writeCall(parser.currentCommand(), parser.arg1(), parser.arg2())
         else:
             print("Implement command: " + parser.currentCommand())
 

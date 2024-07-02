@@ -3,7 +3,7 @@ import os, sys, re
 class VMCodeWriter:
     def __init__(self, fileName, outFilePath):
         self.outFile = open(outFilePath, 'w', encoding='utf-8')
-        self.instructionNo = 0
+        self.comparisonNo = 0
         self.__fileName = ""
         self.setFileName(fileName)
 
@@ -26,6 +26,15 @@ class VMCodeWriter:
         self.__asmOut("A=D")
         self.__asmOut("D=M")
     
+    def __pushDRegisterToStack(self):
+        # *SP=D
+        self.__asmOut("@SP")
+        self.__asmOut("A=M")
+        self.__asmOut("M=D")
+        # SP++
+        self.__asmOut("@SP")
+        self.__asmOut("M=M+1")
+
     def __pushSegment(self, segment, index):
         
         if segment == "constant":
@@ -55,13 +64,7 @@ class VMCodeWriter:
             self.__asmOut("D=M")
         else:
             sys.exit("Unknown memory segment \"" + segment + "\"")
-        # *SP=D
-        self.__asmOut("@SP")
-        self.__asmOut("A=M")
-        self.__asmOut("M=D")
-        # SP++
-        self.__asmOut("@SP")
-        self.__asmOut("M=M+1")
+        self.__pushDRegisterToStack()
 
     # These memory segments are referenced via a pointer in RAM[0..4]. 
     # Those pointers are stored in fixed ram locations
@@ -175,7 +178,7 @@ class VMCodeWriter:
     def __performComparisonOperation(self, command):
             # x - y
             self.__asmOut("D=M-D")
-            self.__asmOut("@IS_TRUE_" + str(self.instructionNo))
+            self.__asmOut("@IS_TRUE_" + str(self.comparisonNo))
             if command == "eq":
                 self.__asmOut("D;JEQ")
             elif command == "lt":
@@ -187,15 +190,15 @@ class VMCodeWriter:
             
             # if the test returned false
             self.__asmOut("D=0")
-            self.__asmOut("@DONE_" + str(self.instructionNo))
+            self.__asmOut("@DONE_" + str(self.comparisonNo))
             self.__asmOut("0;JMP")
 
             # if the test returned true
-            self.__asmOut("(IS_TRUE_" + str(self.instructionNo) +")")
+            self.__asmOut("(IS_TRUE_" + str(self.comparisonNo) +")")
             self.__asmOut("D=-1")
 
             # end of routine for writing true or false to D register
-            self.__asmOut("(DONE_" + str(self.instructionNo) + ")")
+            self.__asmOut("(DONE_" + str(self.comparisonNo) + ")")
         
     # convention is to put "x" into the D register, and reference "y" from the M register
     def __performBinaryArithmetic(self, command):
@@ -227,19 +230,13 @@ class VMCodeWriter:
         else:
             sys.exit("Command \"" + command + "\" not found")
 
-        # *SP = D
-        self.__asmOut("@SP")
-        self.__asmOut("A=M")
-        self.__asmOut("M=D")
-        # SP++
-        self.__asmOut("@SP")
-        self.__asmOut("M=M+1")
+        self.__pushDRegisterToStack()
         
     # Writes to the output file the 
     # assembly code that implements the given
     # arithmetic or logic command
     def writeArithmetic(self, command):
-        self.instructionNo += 1
+        self.comparisonNo += 1
         vmComment = "// " + command
         self.__asmOut(vmComment)
 
@@ -254,7 +251,6 @@ class VMCodeWriter:
     # assembly code that implements the given
     # push or pop command
     def writePushPop(self, command, segment, index):
-        self.instructionNo += 1
         vmComment = "// " + command + " " + segment + " " + str(index)
         self.__asmOut(vmComment)
         
@@ -263,29 +259,161 @@ class VMCodeWriter:
         elif command == "pop":
             self.__popSegment(segment,index)
 
-    def writeLabel(self, command, arg):
-        self.instructionNo+=1
-        vmComment = "// " + command + " " + arg
+    def writeLabel(self, command, label):
+        vmComment = "// " + command + " " + label
         self.__asmOut(vmComment)
-        self.__asmOut("(" + arg + ")")
+        self.__asmOut("(" + label + ")")
 
-    def writeIf(self, command, arg):
-        self.instructionNo+=1
-        vmComment = "// " + command + " " + arg
+    def writeIf(self, command, label):
+        vmComment = "// " + command + " " + label
         self.__asmOut(vmComment) 
         self.__asmOut("@SP")
         self.__asmOut("M=M-1")
         self.__asmOut("A=M")
         self.__asmOut("D=M")
-        self.__asmOut("@" + arg)
+        self.__asmOut("@" + label)
         self.__asmOut("D;JNE")
 
-    def writeGoto(self, command, arg):
-        self.instructionNo+=1
-        vmComment = "// " + command + " " + arg
+    def writeGoto(self, command, label):
+        vmComment = "// " + command + " " + label
         self.__asmOut(vmComment) 
-        self.__asmOut("@" + arg)
+        self.__asmOut("@" + label)
         self.__asmOut("0;JMP")   
+
+    def writeCall(self, command, functionName, nArgs):
+        vmCommand = "// " + command + " " + functionName + " " + nArgs
+
+        self.__asmOut(vmCommand)
+
+        # Push caller return address to stack
+        self.__asmOut("@returnAddress")
+        self.__asmOut("D=M")
+        self.__pushDRegisterToStack()
+
+        # Push caller LCL address to stack
+        self.__asmOut("@LCL")
+        self.__asmOut("D=M")
+        self.__pushDRegisterToStack()
+
+        # Push caller arg address to stack
+        self.__asmOut("@ARG")
+        self.__asmOut("D=M")
+        self.__pushDRegisterToStack()
+
+        # Push caller THIS to stack
+        self.__asmOut("@THIS")
+        self.__asmOut("D=M")
+        self.__pushDRegisterToStack()
+
+        # Push caller THAT to stack
+        self.__asmOut("@THAT")
+        self.__asmOut("D=M")
+        self.__pushDRegisterToStack()
+
+        # Assign callee ARG pointer to first parameter location
+        # @ARG = SP-5-nArgs
+        self.__asmOut("@SP")
+        self.__asmOut("D=M")
+        self.__asmOut("@5")
+        self.__asmOut("D=D-A")
+        self.__asmOut("@" + str(nArgs))
+        self.__asmOut("D=D-A")
+        self.__asmOut("@ARG")
+        self.__asmOut("M=D")
+
+        # Assign callee LCL pointer to current Stack pointer value
+        self.__asmOut("@SP")
+        self.__asmOut("D=M")
+        self.__asmOut("@LCL")
+        self.__asmOut("M=D")
+
+        # Go to the function
+        self.__asmOut("@" + functionName)
+        self.__asmOut("0;JMP")
+
+        # Declare label for returnAddress
+        self.__asmOut("(returnAddress)")
+
+    # Sets the label for the function in asm, then initializes LCL for fn, then increments stack to
+    # Make sure we don't overwrite anything in LCL
+
+    def writeFunction(self, command, functionName, numLocals):
+        vmComment = "// " + command + " " + functionName + " " + str(numLocals)
+        self.__asmOut(vmComment)
+        # declare function label
+        self.__asmOut("(" + functionName + ")")
+        # allocate local memory
+        for x in range(0,numLocals):
+            #Set @LCL[x] = 0, same as pushing 0s to stack
+            self.__pushSegment("constant", 0)
+            
+
+    def writeReturn(self, command):
+        vmComment = "// " + command
+        self.__asmOut(vmComment)
+
+        # temp variable to store mem location of end of stack frame
+        self.__asmOut("@LCL")
+        self.__asmOut("D=M")
+        self.__asmOut("@R14")
+        self.__asmOut("M=D")
+
+        # temp variable to store return address of fn
+        self.__asmOut("@5")
+        self.__asmOut("D=A")
+        self.__asmOut("@R14")
+        self.__asmOut("A=M-D")
+        self.__asmOut("D=M")
+        self.__asmOut("@R15")
+        self.__asmOut("M=D")
+
+        # pop top value from fn stack and move to location arg 0, the top of the stack for the parent fn
+        self.__popSegment("argument", 0)
+
+        # move stack pointer back to where the caller of the parent fn expects it to be in memory
+        self.__asmOut("@ARG")
+        self.__asmOut("D=M+1")
+        self.__asmOut("@SP")
+        self.__asmOut("M=D")
+
+        # restore named pointer values to caller's (parent fn's) state
+        # THAT
+        self.__asmOut("@R14")
+        self.__asmOut("A=M-1")
+        self.__asmOut("D=M")
+        self.__asmOut("@THAT")
+        self.__asmOut("M=D")
+
+        # THIS
+        self.__asmOut("@2")
+        self.__asmOut("D=A")
+        self.__asmOut("@R14")
+        self.__asmOut("A=M-D")
+        self.__asmOut("D=M")
+        self.__asmOut("@THIS")
+        self.__asmOut("M=D")
+
+        # ARG
+        self.__asmOut("@3")
+        self.__asmOut("D=A")
+        self.__asmOut("@R14")
+        self.__asmOut("A=M-D")
+        self.__asmOut("D=M")
+        self.__asmOut("@ARG")
+        self.__asmOut("M=D")
+
+        # LCL
+        self.__asmOut("@4")
+        self.__asmOut("D=A")
+        self.__asmOut("@R14")
+        self.__asmOut("A=M-D")
+        self.__asmOut("D=M")
+        self.__asmOut("@LCL")
+        self.__asmOut("M=D")
+
+        #Jump back to return address and continue execution from parent fn
+        self.__asmOut("@R15")
+        self.__asmOut("0;JMP")
 
     # Informs the codeWriter that the translation
     # of a new VM file has started
