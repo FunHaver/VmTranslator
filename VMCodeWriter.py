@@ -22,8 +22,7 @@ class VMCodeWriter:
         self.__asmOut("@" + symbol)
         self.__asmOut("D=M")
         self.__asmOut("@" + str(index))
-        self.__asmOut("D=D+A")
-        self.__asmOut("A=D")
+        self.__asmOut("A=D+A")
         self.__asmOut("D=M")
     
     def __pushDRegisterToStack(self):
@@ -413,6 +412,7 @@ class VMCodeWriter:
 
         #Jump back to return address and continue execution from parent fn
         self.__asmOut("@R15")
+        self.__asmOut("A=M")
         self.__asmOut("0;JMP")
 
     # Informs the codeWriter that the translation
