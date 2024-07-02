@@ -1,11 +1,11 @@
 import os, sys, re
 
 class VMCodeWriter:
-    def __init__(self, fileName, outFilePath):
+    def __init__(self, outFilePath):
         self.outFile = open(outFilePath, 'w', encoding='utf-8')
         self.comparisonNo = 0
         self.__fileName = ""
-        self.setFileName(fileName)
+        self.__currentFunctionName = ""
 
     def __del__(self):
         self.outFile.close()
@@ -113,7 +113,7 @@ class VMCodeWriter:
         self.__asmOut("A=M")
         self.__asmOut("D=M")
         # self.__fileName.index = D
-        self.__asmOut("@" + self.__writeStaticVariable(index))
+        self.__asmOut("@" + self.__fileName + "." + self.__writeStaticVariable(index))
         self.__asmOut("M=D")
 
     #Here we use a "general purpose VM Implementation Register" to store the destination address of the popped value
@@ -261,7 +261,7 @@ class VMCodeWriter:
     def writeLabel(self, command, label):
         vmComment = "// " + command + " " + label
         self.__asmOut(vmComment)
-        self.__asmOut("(" + label + ")")
+        self.__asmOut("(" + self.__currentFunctionName + "$" + label + ")")
 
     def writeIf(self, command, label):
         vmComment = "// " + command + " " + label
@@ -270,17 +270,17 @@ class VMCodeWriter:
         self.__asmOut("M=M-1")
         self.__asmOut("A=M")
         self.__asmOut("D=M")
-        self.__asmOut("@" + label)
+        self.__asmOut("@" + self.__currentFunctionName + "$" + label)
         self.__asmOut("D;JNE")
 
     def writeGoto(self, command, label):
         vmComment = "// " + command + " " + label
         self.__asmOut(vmComment) 
-        self.__asmOut("@" + label)
+        self.__asmOut("@" + self.__currentFunctionName + "$" + label)
         self.__asmOut("0;JMP")   
 
     def writeCall(self, command, functionName, nArgs):
-        vmCommand = "// " + command + " " + functionName + " " + nArgs
+        vmCommand = "// " + command + " " + functionName + " " + str(nArgs)
 
         self.__asmOut(vmCommand)
 
@@ -333,10 +333,14 @@ class VMCodeWriter:
         # Declare label for returnAddress
         self.__asmOut("(returnAddress)")
 
+
+    def setFunctionName(self, name):
+        self.__currentFunctionName = name
     # Sets the label for the function in asm, then initializes LCL for fn, then increments stack to
     # Make sure we don't overwrite anything in LCL
 
     def writeFunction(self, command, functionName, numLocals):
+        self.setFunctionName(functionName)
         vmComment = "// " + command + " " + functionName + " " + str(numLocals)
         self.__asmOut(vmComment)
         # declare function label
