@@ -334,13 +334,14 @@ class VMCodeWriter:
         self.__asmOut("(returnAddress)")
 
 
-    def setFunctionName(self, name):
+    def __setFunctionName(self, name):
         self.__currentFunctionName = name
+    
     # Sets the label for the function in asm, then initializes LCL for fn, then increments stack to
     # Make sure we don't overwrite anything in LCL
 
     def writeFunction(self, command, functionName, numLocals):
-        self.setFunctionName(functionName)
+        self.__setFunctionName(functionName)
         vmComment = "// " + command + " " + functionName + " " + str(numLocals)
         self.__asmOut(vmComment)
         # declare function label
