@@ -114,7 +114,7 @@ class VMCodeWriter:
         self.__asmOut("A=M")
         self.__asmOut("D=M")
         # self.__fileName.index = D
-        self.__asmOut("@" + self.__fileName + "." + self.__writeStaticVariable(index))
+        self.__asmOut("@" + self.__writeStaticVariable(index))
         self.__asmOut("M=D")
 
     #Here we use a "general purpose VM Implementation Register" to store the destination address of the popped value
