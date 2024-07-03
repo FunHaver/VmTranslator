@@ -4,7 +4,8 @@ class VMCodeWriter:
     def __init__(self, outFilePath):
         self.outFile = open(outFilePath, 'w', encoding='utf-8')
         self.comparisonNo = 0
-        self.__fileName = ""
+        self.callNo = 0
+        self.__fileName = "NoFileName"
         self.__currentFunctionName = ""
 
     def __del__(self):
@@ -231,6 +232,15 @@ class VMCodeWriter:
 
         self.__pushDRegisterToStack()
         
+
+    # Writes the initial assembly to set the stack pointer and call Sys.init
+    def writeInit(self):
+        self.__asmOut("@256")
+        self.__asmOut("D=A")
+        self.__asmOut("@0")
+        self.__asmOut("M=D")
+        self.writeCall("call","Sys.init",0)
+
     # Writes to the output file the 
     # assembly code that implements the given
     # arithmetic or logic command
@@ -283,10 +293,13 @@ class VMCodeWriter:
         vmCommand = "// " + command + " " + functionName + " " + str(nArgs)
 
         self.__asmOut(vmCommand)
+        self.callNo += 1
 
+        returnAddressLabel = self.__fileName + "." + functionName + "." + "returnAddress." + str(self.callNo)
+        
         # Push caller return address to stack
-        self.__asmOut("@returnAddress")
-        self.__asmOut("D=M")
+        self.__asmOut("@" + returnAddressLabel)
+        self.__asmOut("D=A")
         self.__pushDRegisterToStack()
 
         # Push caller LCL address to stack
@@ -331,7 +344,7 @@ class VMCodeWriter:
         self.__asmOut("0;JMP")
 
         # Declare label for returnAddress
-        self.__asmOut("(returnAddress)")
+        self.__asmOut("(" + returnAddressLabel + ")")
 
 
     def __setFunctionName(self, name):
@@ -422,6 +435,6 @@ class VMCodeWriter:
 
     # Informs the codeWriter that the translation
     # of a new VM file has started
-    def setFileName(self, name):
+    def setInFileName(self, name):
         self.__fileName = re.sub('\\.vm$', '', name)
 

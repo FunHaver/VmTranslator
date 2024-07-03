@@ -28,10 +28,12 @@ def main():
         
     outFileName = os.path.split(outFilePath)[1]
     codeWriter = VMCodeWriter(outFilePath)
+    codeWriter.writeInit()
 
     for file in vmFiles:
+
         parser = VMParser(file)
-        codeWriter.setFileName(os.path.split(file)[1])
+        codeWriter.setInFileName(os.path.split(file)[1])
         while parser.hasMoreLines():
             parser.advance()
             if parser.commandType() == "C_PUSH" or parser.commandType() == "C_POP":
