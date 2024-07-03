@@ -30,5 +30,7 @@ The resulting .asm file will be written to your current working directory.
 
 The result of the example command will place a .asm file in the VMTranslator directory.
 
-## Running the .hack file
-Now that you are in posession of an assembled file, it can be tested via the CPU emulator tool provided by the NAND2TETRIS course located here: https://nand2tetris.github.io/web-ide/cpu
+## Running the .asm file
+Now that you are in posession of a HACK assembly file, it can be tested via the CPU emulator tool, which will assemble the file, provided by the NAND2TETRIS course located here: https://nand2tetris.github.io/web-ide/cpu. 
+
+Or it can be fed into a HACK assembler [like this one](https://github.com/FunHaver/HackAssembler) and then you may use the aformentioned CPU emulator tool to execute the binary. Both options provide the same result.
